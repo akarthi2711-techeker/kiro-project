@@ -1,0 +1,484 @@
+
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Guardian NightSafe – Women Safety System</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="style.css"/>
+</head>
+<body>
+
+<!-- ══════════════════════════════════════════
+     ONBOARDING OVERLAY
+══════════════════════════════════════════ -->
+<div id="onboarding" class="onboarding-overlay">
+  <div class="ob-bg"></div>
+  <div class="ob-content">
+    <div class="ob-logo"><span class="ob-shield">🛡</span><span class="ob-brand">Guardian<strong>NightSafe</strong></span></div>
+    <div class="ob-slides">
+      <div class="ob-slide active" data-slide="0">
+        <div class="ob-icon">🌙</div>
+        <h2>Your Safety, Always On</h2>
+        <p>Real-time protection, instant SOS, and live location sharing — all in one place.</p>
+      </div>
+      <div class="ob-slide" data-slide="1">
+        <div class="ob-icon">📍</div>
+        <h2>Smart Location Intelligence</h2>
+        <p>Find nearby police stations, hospitals, and safe zones instantly on an interactive map.</p>
+      </div>
+      <div class="ob-slide" data-slide="2">
+        <div class="ob-icon">🔒</div>
+        <h2>Stealth & Night Guardian</h2>
+        <p>Hidden triggers, fake screens, and automatic check-in escalation keep you protected discreetly.</p>
+      </div>
+    </div>
+    <div class="ob-dots">
+      <span class="ob-dot active" data-dot="0"></span>
+      <span class="ob-dot" data-dot="1"></span>
+      <span class="ob-dot" data-dot="2"></span>
+    </div>
+    <button class="ob-next-btn" id="obNextBtn" onclick="obNext()">Get Started</button>
+    <p class="ob-skip" onclick="startApp()">Skip intro</p>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     STEALTH MODE OVERLAY
+══════════════════════════════════════════ -->
+<div id="stealthOverlay" class="stealth-overlay hidden">
+  <div class="stealth-fake-screen">
+    <div class="stealth-clock" id="stealthClock">00:00</div>
+    <div class="stealth-date" id="stealthDate">Monday, January 1</div>
+    <div class="stealth-icons">
+      <span>📶</span><span>🔋</span><span>📡</span>
+    </div>
+    <p class="stealth-hint">Tap 5 times quickly to exit stealth</p>
+  </div>
+  <div id="stealthTapZone" class="stealth-tap-zone" onclick="stealthTap()"></div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     FAKE CALL OVERLAY
+══════════════════════════════════════════ -->
+<div id="fakeCallOverlay" class="fake-call-overlay hidden">
+  <div class="fcall-wallpaper"></div>
+  <div class="fcall-body">
+    <p class="fcall-network">Guardian · Secure</p>
+    <div class="fcall-avatar" id="fcallAvatar">👩</div>
+    <h2 class="fcall-name" id="fcallName">Mom</h2>
+    <p class="fcall-status" id="fcallStatus">Incoming Call…</p>
+    <div class="fcall-btns">
+      <div class="fcall-btn-wrap"><button class="fcall-btn decline" onclick="endFakeCall()">📵</button><small>Decline</small></div>
+      <div class="fcall-btn-wrap"><button class="fcall-btn accept" onclick="acceptFakeCall()">📞</button><small>Accept</small></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     SOS COUNTDOWN MODAL
+══════════════════════════════════════════ -->
+<div id="sosCountdownModal" class="sos-countdown-modal hidden">
+  <div class="soscm-inner">
+    <div class="soscm-ring r3"></div><div class="soscm-ring r2"></div><div class="soscm-ring r1"></div>
+    <div class="soscm-circle">
+      <span class="soscm-num" id="soscmNum">5</span>
+      <span class="soscm-label">SOS</span>
+    </div>
+    <p class="soscm-text">Activating emergency alert…</p>
+    <button class="soscm-cancel" onclick="cancelSOS()">✕ Cancel</button>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     TOAST
+══════════════════════════════════════════ -->
+<div id="toast" class="toast hidden"></div>
+
+<!-- ══════════════════════════════════════════
+     MAIN APP
+══════════════════════════════════════════ -->
+<div id="app" class="app hidden">
+
+  <!-- SIDEBAR (desktop) -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sb-logo">
+      <span class="sb-shield">🛡</span>
+      <div><p class="sb-brand">Guardian</p><p class="sb-sub">NightSafe</p></div>
+    </div>
+    <nav class="sb-nav">
+      <button class="sb-link active" data-section="home" onclick="navTo('home',this)"><span>🏠</span>Dashboard</button>
+      <button class="sb-link" data-section="map" onclick="navTo('map',this)"><span>🗺</span>Nearby Help</button>
+      <button class="sb-link" data-section="night" onclick="navTo('night',this)"><span>🌙</span>Night Guardian</button>
+      <button class="sb-link" data-section="stealth" onclick="navTo('stealth',this)"><span>🔒</span>Stealth Mode</button>
+      <button class="sb-link" data-section="evidence" onclick="navTo('evidence',this)"><span>🎙</span>Evidence</button>
+      <button class="sb-link" data-section="contacts" onclick="navTo('contacts',this)"><span>👥</span>Contacts</button>
+      <button class="sb-link" data-section="settings" onclick="navTo('settings',this)"><span>⚙</span>Settings</button>
+    </nav>
+    <div class="sb-status-bar">
+      <div class="sb-status-dot" id="sbDot"></div>
+      <span id="sbStatusText">Protected</span>
+    </div>
+    <button class="sb-theme-btn" onclick="toggleTheme()">☀ Light Mode</button>
+  </aside>
+
+  <!-- MAIN CONTENT -->
+  <main class="main-content" id="mainContent">
+
+    <!-- TOP BAR (mobile) -->
+    <header class="topbar">
+      <button class="topbar-menu" onclick="toggleMobileMenu()">☰</button>
+      <div class="topbar-brand">🛡 <strong>NightSafe</strong></div>
+      <div class="topbar-right">
+        <div class="live-beacon" id="liveBeacon"><span class="beacon-dot"></span>LIVE</div>
+        <button class="topbar-theme" onclick="toggleTheme()">☀</button>
+      </div>
+    </header>
+
+    <!-- MOBILE NAV DRAWER -->
+    <div class="mobile-drawer hidden" id="mobileDrawer">
+      <button class="mob-link" onclick="navTo('home');toggleMobileMenu()">🏠 Dashboard</button>
+      <button class="mob-link" onclick="navTo('map');toggleMobileMenu()">🗺 Nearby Help</button>
+      <button class="mob-link" onclick="navTo('night');toggleMobileMenu()">🌙 Night Guardian</button>
+      <button class="mob-link" onclick="navTo('stealth');toggleMobileMenu()">🔒 Stealth Mode</button>
+      <button class="mob-link" onclick="navTo('evidence');toggleMobileMenu()">🎙 Evidence</button>
+      <button class="mob-link" onclick="navTo('contacts');toggleMobileMenu()">👥 Contacts</button>
+      <button class="mob-link" onclick="navTo('settings');toggleMobileMenu()">⚙ Settings</button>
+    </div>
+
+    <!-- ─── SECTION: HOME ─── -->
+    <section id="sec-home" class="section active">
+      <div class="home-layout">
+
+        <!-- LEFT: SOS + Quick Actions -->
+        <div class="home-left">
+          <div class="sos-panel glass-panel">
+            <p class="sos-panel-label">EMERGENCY SOS</p>
+            <div class="sos-btn-wrap">
+              <div class="sos-aura a3"></div><div class="sos-aura a2"></div><div class="sos-aura a1"></div>
+              <button class="sos-btn" id="sosBtn"
+                onmousedown="startSOSHold()" onmouseup="cancelSOSHold()" onmouseleave="cancelSOSHold()"
+                ontouchstart="startSOSHold(event)" ontouchend="cancelSOSHold()">
+                <span class="sos-btn-label">SOS</span>
+                <span class="sos-btn-sub">Hold 5s</span>
+                <svg class="sos-progress" viewBox="0 0 120 120">
+                  <circle class="sos-track" cx="60" cy="60" r="54"/>
+                  <circle class="sos-fill" id="sosFill" cx="60" cy="60" r="54"/>
+                </svg>
+              </button>
+            </div>
+            <p class="sos-hint-text" id="sosHintText">Hold the button for 5 seconds to activate</p>
+          </div>
+
+          <div class="quick-calls glass-panel">
+            <p class="panel-title">Quick Emergency Calls</p>
+            <div class="qcall-grid">
+              <button class="qcall-btn police" onclick="quickCall('police')"><span>🚔</span><small>Police<br>100</small></button>
+              <button class="qcall-btn ambulance" onclick="quickCall('ambulance')"><span>🚑</span><small>Ambulance<br>108</small></button>
+              <button class="qcall-btn helpline" onclick="quickCall('helpline')"><span>📞</span><small>Helpline<br>1091</small></button>
+              <button class="qcall-btn trusted" onclick="quickCall('trusted')"><span>👩</span><small>Mom<br>Contact</small></button>
+            </div>
+          </div>
+
+          <div class="alert-templates glass-panel">
+            <p class="panel-title">Emergency Message Templates</p>
+            <div class="template-list" id="templateList"></div>
+          </div>
+        </div>
+
+        <!-- CENTER: Map -->
+        <div class="home-center">
+          <div class="map-panel glass-panel">
+            <div class="map-header">
+              <p class="panel-title">📍 Live Location</p>
+              <div class="map-controls">
+                <button class="map-ctrl-btn" onclick="centerMap()" title="Center">⊕</button>
+                <button class="map-ctrl-btn" onclick="refreshNearby()" title="Refresh">↻</button>
+              </div>
+            </div>
+            <div id="mainMap" class="main-map"></div>
+            <div class="map-footer">
+              <span id="mapCoords" class="map-coords">Acquiring location…</span>
+              <button class="share-loc-btn" onclick="shareLocation()">🔗 Share Location</button>
+            </div>
+          </div>
+          <div class="safety-tips glass-panel" id="safetyTipsPanel">
+            <p class="panel-title">⚡ Safety Tips</p>
+            <div class="tips-scroll" id="tipsList"></div>
+          </div>
+        </div>
+
+        <!-- RIGHT: Status + Timeline -->
+        <div class="home-right">
+          <div class="status-panel glass-panel">
+            <p class="panel-title">System Status</p>
+            <div class="status-rows" id="statusRows"></div>
+          </div>
+          <div class="incident-panel glass-panel" id="incidentPanel">
+            <p class="panel-title">📋 Incident Timeline</p>
+            <div class="timeline" id="timeline"><p class="empty-state">No active incident</p></div>
+          </div>
+          <div class="alert-delivery glass-panel hidden" id="alertDeliveryPanel">
+            <p class="panel-title">📤 Alert Delivery</p>
+            <div id="deliveryList" class="delivery-list"></div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ─── SECTION: ACTIVE SOS ─── -->
+    <section id="sec-sos" class="section sos-active-section hidden">
+      <div class="sos-active-layout">
+        <div class="sos-active-header">
+          <div class="sos-active-pulse"></div>
+          <h1 class="sos-active-title">🚨 EMERGENCY ACTIVE</h1>
+          <p class="sos-active-time" id="sosActiveTime">00:00</p>
+        </div>
+        <div class="sos-active-grid">
+          <div class="soa-card glass-panel">
+            <p class="soa-label">Location</p>
+            <p class="soa-val" id="soaLocation">Acquiring…</p>
+          </div>
+          <div class="soa-card glass-panel">
+            <p class="soa-label">Contacts Notified</p>
+            <p class="soa-val" id="soaContacts">0 / 3</p>
+          </div>
+          <div class="soa-card glass-panel">
+            <p class="soa-label">Nearest Help</p>
+            <p class="soa-val" id="soaHelp">Searching…</p>
+          </div>
+          <div class="soa-card glass-panel">
+            <p class="soa-label">Alert Status</p>
+            <p class="soa-val" id="soaStatus">Sending…</p>
+          </div>
+        </div>
+        <div class="sos-active-actions">
+          <a href="tel:100" class="soa-action-btn police">📞 Call Police</a>
+          <a href="tel:108" class="soa-action-btn ambulance">🚑 Ambulance</a>
+          <button class="soa-action-btn cancel" onclick="deactivateSOS()">✕ Cancel SOS</button>
+        </div>
+        <div class="sos-active-map-wrap">
+          <div id="sosMap" class="sos-map"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ─── SECTION: NEARBY MAP ─── -->
+    <section id="sec-map" class="section hidden">
+      <div class="nearby-layout">
+        <div class="nearby-sidebar">
+          <p class="panel-title">🗺 Nearby Emergency Help</p>
+          <div class="nearby-filter">
+            <button class="nf-btn active" onclick="filterNearby('all',this)">All</button>
+            <button class="nf-btn" onclick="filterNearby('police',this)">🚔 Police</button>
+            <button class="nf-btn" onclick="filterNearby('hospital',this)">🏥 Hospital</button>
+            <button class="nf-btn" onclick="filterNearby('pharmacy',this)">💊 Pharmacy</button>
+            <button class="nf-btn" onclick="filterNearby('petrol',this)">⛽ Petrol</button>
+            <button class="nf-btn" onclick="filterNearby('safe',this)">🏪 Safe Zone</button>
+          </div>
+          <div class="nearby-list" id="nearbyList"></div>
+        </div>
+        <div class="nearby-map-wrap">
+          <div id="nearbyMap" class="nearby-map"></div>
+          <div class="safe-rec-card glass-panel" id="safeRecCard">
+            <p class="src-label">⭐ Recommended Safe Place</p>
+            <p class="src-name" id="srcName">City Police Station</p>
+            <p class="src-meta" id="srcMeta">0.4 km · NE direction · Open 24/7</p>
+            <button class="src-nav-btn" onclick="navigateTo()">Navigate →</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ─── SECTION: NIGHT GUARDIAN ─── -->
+    <section id="sec-night" class="section hidden">
+      <div class="night-layout">
+        <div class="night-hero glass-panel">
+          <div class="night-moon-anim">🌙</div>
+          <h2>Night Guardian Mode</h2>
+          <p class="night-desc">Activate continuous monitoring for night travel. Missed check-ins automatically escalate to emergency alerts.</p>
+          <button class="night-toggle-btn" id="nightToggleBtn" onclick="toggleNightMode()">Activate Night Guardian</button>
+        </div>
+        <div class="night-config glass-panel" id="nightConfig">
+          <p class="panel-title">⚙ Guardian Settings</p>
+          <div class="night-setting">
+            <label>Check-in interval</label>
+            <select id="nightInterval" class="night-select">
+              <option value="5">Every 5 minutes</option>
+              <option value="10" selected>Every 10 minutes</option>
+              <option value="15">Every 15 minutes</option>
+              <option value="30">Every 30 minutes</option>
+            </select>
+          </div>
+          <div class="night-setting">
+            <label>Destination</label>
+            <input type="text" id="nightDest" class="night-input" placeholder="Enter destination…"/>
+          </div>
+          <div class="night-setting">
+            <label>ETA</label>
+            <input type="time" id="nightETA" class="night-input"/>
+          </div>
+        </div>
+        <div class="night-status-panel glass-panel hidden" id="nightStatusPanel">
+          <p class="panel-title">🟢 Guardian Active</p>
+          <div class="night-checkin-wrap">
+            <div class="night-checkin-ring" id="nightRing"></div>
+            <div class="night-checkin-info">
+              <p class="nci-label">Next check-in in</p>
+              <p class="nci-timer" id="nightTimer">10:00</p>
+            </div>
+          </div>
+          <div class="night-checkin-btns">
+            <button class="ncb-safe" onclick="nightCheckIn()">✅ I'm Safe</button>
+            <button class="ncb-sos" onclick="nightSOS()">🆘 Need Help</button>
+          </div>
+          <div class="night-log" id="nightLog"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ─── SECTION: STEALTH ─── -->
+    <section id="sec-stealth" class="section hidden">
+      <div class="stealth-layout">
+        <div class="stealth-hero glass-panel">
+          <div class="stealth-icon-anim">🔒</div>
+          <h2>Stealth Protection</h2>
+          <p>Activate a fake lock screen. Tap 5 times quickly to exit. SOS continues running in background.</p>
+          <button class="stealth-activate-btn" onclick="activateStealth()">Activate Stealth Mode</button>
+        </div>
+        <div class="stealth-features glass-panel">
+          <p class="panel-title">Stealth Features</p>
+          <div class="sf-item"><span>📱</span><div><p>Fake Lock Screen</p><small>Shows a realistic clock screen</small></div></div>
+          <div class="sf-item"><span>📞</span><div><p>Fake Incoming Call</p><small>Simulates a call to escape situations</small></div></div>
+          <div class="sf-item"><span>🔕</span><div><p>Silent SOS</p><small>Sends alert without sound or screen change</small></div></div>
+          <div class="sf-item"><span>👆</span><div><p>5-Tap Exit</p><small>Tap 5 times quickly to exit stealth</small></div></div>
+        </div>
+        <div class="stealth-actions glass-panel">
+          <p class="panel-title">Quick Stealth Actions</p>
+          <button class="stealth-action-btn" onclick="triggerFakeCall()">📞 Trigger Fake Call</button>
+          <button class="stealth-action-btn" onclick="silentSOS()">🔕 Silent SOS</button>
+          <button class="stealth-action-btn" onclick="triggerSiren()">🔊 Loud Siren</button>
+          <button class="stealth-action-btn" onclick="triggerStrobe()">💡 Strobe Flash</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ─── SECTION: EVIDENCE ─── -->
+    <section id="sec-evidence" class="section hidden">
+      <div class="evidence-layout">
+        <div class="evidence-hero glass-panel">
+          <h2>🎙 Evidence Capture</h2>
+          <p>Record audio or video evidence securely. Files are stored locally on your device.</p>
+          <div class="evidence-controls">
+            <button class="ev-btn audio" id="audioRecBtn" onclick="toggleAudioRec()">🎙 Start Audio Recording</button>
+            <button class="ev-btn video" id="videoRecBtn" onclick="toggleVideoRec()">🎥 Start Video Recording</button>
+          </div>
+          <div class="ev-status hidden" id="evStatus">
+            <div class="ev-rec-dot"></div>
+            <span id="evStatusText">Recording…</span>
+            <span class="ev-timer" id="evTimer">00:00</span>
+          </div>
+          <video id="evVideoPreview" class="ev-video-preview hidden" autoplay muted playsinline></video>
+        </div>
+        <div class="evidence-list-panel glass-panel">
+          <p class="panel-title">Saved Evidence</p>
+          <div id="evidenceList" class="evidence-list"><p class="empty-state">No recordings yet</p></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ─── SECTION: CONTACTS ─── -->
+    <section id="sec-contacts" class="section hidden">
+      <div class="contacts-layout">
+        <div class="contacts-panel glass-panel">
+          <div class="contacts-header">
+            <p class="panel-title">👥 Emergency Contacts</p>
+            <button class="add-contact-btn" onclick="showAddContact()">+ Add</button>
+          </div>
+          <div id="addContactForm" class="add-contact-form hidden">
+            <input type="text" id="cName" class="form-input" placeholder="Full Name"/>
+            <input type="tel" id="cPhone" class="form-input" placeholder="Phone Number"/>
+            <input type="text" id="cRelation" class="form-input" placeholder="Relation (Mom, Friend…)"/>
+            <div class="form-row">
+              <button class="form-save-btn" onclick="saveContact()">Save</button>
+              <button class="form-cancel-btn" onclick="hideAddContact()">Cancel</button>
+            </div>
+          </div>
+          <div id="contactsList" class="contacts-list"></div>
+        </div>
+        <div class="profile-panel glass-panel">
+          <p class="panel-title">👤 My Profile</p>
+          <div class="profile-fields">
+            <div class="pf-row"><label>Name</label><input type="text" id="pName" class="form-input" placeholder="Your name"/></div>
+            <div class="pf-row"><label>Blood Group</label>
+              <select id="pBlood" class="form-input">
+                <option>A+</option><option>A-</option><option>B+</option><option>B-</option>
+                <option>O+</option><option>O-</option><option>AB+</option><option>AB-</option>
+              </select>
+            </div>
+            <div class="pf-row"><label>Medical Notes</label><textarea id="pMedical" class="form-input form-textarea" placeholder="Allergies, conditions…"></textarea></div>
+            <button class="form-save-btn" onclick="saveProfile()">Save Profile</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ─── SECTION: SETTINGS ─── -->
+    <section id="sec-settings" class="section hidden">
+      <div class="settings-layout">
+        <div class="settings-panel glass-panel">
+          <p class="panel-title">⚙ Emergency Preferences</p>
+          <div class="setting-row">
+            <div><p class="sr-label">Auto-share location on SOS</p><p class="sr-sub">Automatically share GPS link</p></div>
+            <label class="toggle-switch"><input type="checkbox" id="setAutoLoc" checked/><span class="toggle-slider"></span></label>
+          </div>
+          <div class="setting-row">
+            <div><p class="sr-label">Loud siren on SOS</p><p class="sr-sub">Play emergency siren sound</p></div>
+            <label class="toggle-switch"><input type="checkbox" id="setSiren" checked/><span class="toggle-slider"></span></label>
+          </div>
+          <div class="setting-row">
+            <div><p class="sr-label">Voice trigger ("Help me")</p><p class="sr-sub">Use speech recognition</p></div>
+            <label class="toggle-switch"><input type="checkbox" id="setVoice"/><span class="toggle-slider"></span></label>
+          </div>
+          <div class="setting-row">
+            <div><p class="sr-label">Vibration alerts</p><p class="sr-sub">Vibrate on emergency events</p></div>
+            <label class="toggle-switch"><input type="checkbox" id="setVibrate" checked/><span class="toggle-slider"></span></label>
+          </div>
+          <div class="setting-row">
+            <div><p class="sr-label">Dark mode</p><p class="sr-sub">Toggle app theme</p></div>
+            <label class="toggle-switch"><input type="checkbox" id="setDark" checked onchange="toggleTheme()"/><span class="toggle-slider"></span></label>
+          </div>
+        </div>
+        <div class="integrations-panel glass-panel">
+          <p class="panel-title">🔌 Integration Status</p>
+          <div class="int-row"><span class="int-dot mock"></span><p>SMS Gateway</p><small>Mock — connect Twilio</small></div>
+          <div class="int-row"><span class="int-dot mock"></span><p>WhatsApp API</p><small>Mock — connect Meta API</small></div>
+          <div class="int-row"><span class="int-dot mock"></span><p>Email Alerts</p><small>Mock — connect SendGrid</small></div>
+          <div class="int-row"><span class="int-dot mock"></span><p>Police System</p><small>Mock — connect ERSS</small></div>
+          <div class="int-row"><span class="int-dot ok"></span><p>Geolocation</p><small>Browser API — Active</small></div>
+          <div class="int-row"><span class="int-dot ok"></span><p>Web Audio</p><small>Browser API — Active</small></div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- STICKY BOTTOM BAR (mobile) -->
+  <nav class="bottom-bar">
+    <button class="bb-btn active" data-section="home" onclick="navTo('home',this)"><span>🏠</span><small>Home</small></button>
+    <button class="bb-btn" data-section="map" onclick="navTo('map',this)"><span>🗺</span><small>Map</small></button>
+    <button class="bb-btn bb-sos" onclick="startSOSHold();setTimeout(cancelSOSHold,100)"><span>🆘</span></button>
+    <button class="bb-btn" data-section="night" onclick="navTo('night',this)"><span>🌙</span><small>Night</small></button>
+    <button class="bb-btn" data-section="contacts" onclick="navTo('contacts',this)"><span>👥</span><small>Contacts</small></button>
+  </nav>
+
+</div><!-- /app -->
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
